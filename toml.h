@@ -22,6 +22,7 @@ enum toml_type {
 };
 
 struct toml_node;
+struct toml_iter;
 
 typedef void (*toml_node_walker)(struct toml_node*, void*);
 
@@ -36,6 +37,9 @@ void toml_dive(struct toml_node*, toml_node_walker, void*);
 enum toml_type toml_type(struct toml_node*);
 char* toml_name(struct toml_node*);				/* caller should free return value */
 char* toml_value_as_string(struct toml_node*);	/* caller should free return value */
+int toml_iter_init(struct toml_iter**, struct toml_node*);
+struct toml_node* toml_iter_next(struct toml_iter*);
+void toml_iter_free(struct toml_iter*);
 
 #ifdef __cplusplus
 }; // extern "C"

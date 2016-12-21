@@ -530,3 +530,72 @@ toml_name(struct toml_node* node)
 {
 	return _json_string_encode(node->name);
 }
+
+int
+toml_iter_init(struct toml_iter** iter, struct toml_node* node)
+{
+	*iter = calloc(1, sizeof(struct toml_iter));
+
+	switch (node->type) {
+		case TOML_ROOT:
+		case TOML_INLINE_TABLE:
+		case TOML_TABLE:
+			(*iter)->map = list_top(&node->value.map, struct toml_table_item, map);
+			break;
+
+		case TOML_LIST:
+		case TOML_TABLE_ARRAY:
+			(*iter)->list = list_top(&node->value.list, struct toml_list_item, list);
+			break;
+
+		default:
+			free(*iter);
+			return -1;
+	}
+
+	(*iter)->parent = node;
+	return 0;
+}
+
+struct toml_node*
+toml_iter_next(struct toml_iter* iter)
+{
+	struct toml_node* ret = NULL;
+	struct list_node* next;
+
+	switch (iter->parent->type) {
+		case TOML_ROOT:
+		case TOML_INLINE_TABLE:
+		case TOML_TABLE:
+			if (NULL == iter->map) {
+				return NULL;
+			}
+
+			ret = &iter->map->node;
+			next = iter->map->map.next;
+			iter->map = (void*)(&iter->parent->value.map.n == next ? NULL : next);
+			break;
+
+		case TOML_LIST:
+		case TOML_TABLE_ARRAY:
+			if (NULL == iter->list) {
+				return NULL;
+			}
+
+			ret = &iter->list->node;
+			next = iter->list->list.next;
+			iter->list = (void*)(&iter->parent->value.list.n == next ? NULL : next);
+			break;
+
+		default:
+			return NULL;
+	}
+
+	return ret;
+}
+
+void
+toml_iter_free(struct toml_iter* iter)
+{
+	free(iter);
+}

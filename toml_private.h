@@ -39,6 +39,14 @@ struct toml_list_item {
 	struct toml_node node;
 };
 
+struct toml_iter {
+	struct toml_node *parent;
+	union {
+		struct toml_table_item *map;
+		struct toml_list_item *list;
+	};
+};
+
 const char* toml_type_to_str(enum toml_type);
 int SawTableArray(struct toml_node*, char*, struct toml_node**, char**);
 int SawTable(struct toml_node*, char*, struct toml_node**, char**);
