@@ -1,6 +1,8 @@
 #ifndef TOML_H
 #define TOML_H
 
+#include <sys/types.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 #ifdef __cplusplus
@@ -37,6 +39,10 @@ void toml_dive(struct toml_node*, toml_node_walker, void*);
 enum toml_type toml_type(struct toml_node*);
 char* toml_name(struct toml_node*);				/* caller should free return value */
 char* toml_value_as_string(struct toml_node*);	/* caller should free return value */
+char* toml_value_string(struct toml_node*);
+int64_t toml_value_int(struct toml_node*);
+double toml_value_float(struct toml_node*);
+bool toml_value_bool(struct toml_node*);
 int toml_iter_init(struct toml_iter**, struct toml_node*);
 struct toml_node* toml_iter_next(struct toml_iter*);
 void toml_iter_free(struct toml_iter*);

@@ -519,6 +519,52 @@ toml_value_as_string(struct toml_node* node)
 	return ret;
 }
 
+char*
+toml_value_string(struct toml_node* node)
+{
+	if (TOML_STRING == node->type) {
+		return node->value.string;
+	}
+
+	return NULL;
+}
+
+int64_t
+toml_value_int(struct toml_node* node)
+{
+	if (TOML_INT == node->type) {
+		return node->value.integer;
+
+	} else if (TOML_FLOAT == node->type) {
+		return (int64_t) node->value.floating.value;
+	}
+
+	return 0;
+}
+
+double
+toml_value_float(struct toml_node* node)
+{
+	if (TOML_INT == node->type) {
+		return (double) node->value.integer;
+
+	} else if (TOML_FLOAT == node->type) {
+		return node->value.floating.value;
+	}
+
+	return 0.0;
+}
+
+bool
+toml_value_bool(struct toml_node* node)
+{
+	if (TOML_BOOLEAN == node->type) {
+		return (bool) node->value.integer;
+	}
+
+	return false;
+}
+
 enum toml_type
 toml_type(struct toml_node* node)
 {
