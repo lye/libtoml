@@ -415,6 +415,50 @@ testInlineTable(void)
 }
 
 static void
+testArraySubobjects(void)
+{
+	int ret;
+	struct toml_node* root;
+	struct toml_node* node, * subnode;
+	struct toml_iter* iter;
+	char *toml = "\
+		[[sub]]\n\
+		[sub.foo]\n\
+		bar = 12\n\
+		[[sub]]\n\
+		[sub.foo]\n\
+		bar = 14\n\
+	";
+
+	toml_init(&root);
+
+	ret = toml_parse(root, toml, strlen(toml));
+	CU_ASSERT_FATAL(ret == 0);
+
+	node = toml_get(root, "sub");
+	CU_ASSERT_FATAL(node != NULL);
+	CU_ASSERT(node->type == TOML_TABLE_ARRAY);
+
+	ret = toml_iter_init(&iter, node);
+	CU_ASSERT(ret == 0);
+
+	int idx = 0;
+	while (NULL != (node = toml_iter_next(iter))) {
+		CU_ASSERT(node->type == TOML_TABLE);
+
+		subnode = toml_get(node, "bar");
+		CU_ASSERT_FATAL(subnode != NULL);
+		CU_ASSERT(node->type == TOML_INT);
+		CU_ASSERT(toml_value_int(subnode) == idx ? 14 : 12);
+		idx += 1;
+	}
+
+	CU_ASSERT(idx == 2);
+
+	toml_free(root);
+}
+
+static void
 testJunkInputs(void)
 {
 	int					ret;
@@ -453,7 +497,7 @@ mmapAndParse(char *path, int expected)
 	CU_ASSERT_FATAL(m != NULL);
 
 	ret = toml_parse(root, m, st.st_size);
-	CU_ASSERT(ret == expected);
+	CU_ASSERT_FATAL(ret == expected);
 
 	munmap(m, st.st_size);
 	close(fd);
@@ -466,6 +510,7 @@ testGoodExamples(void)
 	mmapAndParse("examples/example.toml", 0);
 	mmapAndParse("examples/hard_example.toml", 0);
 	mmapAndParse("examples/array_of_tables.toml", 0);
+	mmapAndParse("examples/array_of_fruit.toml", 0);
 }
 
 static void
@@ -475,6 +520,7 @@ testBadExamples(void)
 	mmapAndParse("examples/text_after_table.toml", 1);
 	mmapAndParse("examples/text_after_value.toml", 1);
 	mmapAndParse("examples/text_in_array.toml", 1);
+	mmapAndParse("examples/array_conflict.toml", 1);
 }
 
 int main(void)
@@ -525,6 +571,9 @@ int main(void)
 		goto out;
 
 	if ((NULL == CU_add_test(pSuite, "test junk inputs", testJunkInputs)))
+		goto out;
+
+	if ((NULL == CU_add_test(pSuite, "test array subobjects", testArraySubobjects)))
 		goto out;
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
