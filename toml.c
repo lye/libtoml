@@ -581,6 +581,9 @@ int
 toml_iter_init(struct toml_iter** iter, struct toml_node* node)
 {
 	*iter = calloc(1, sizeof(struct toml_iter));
+	if (NULL == *iter) {
+		return -1;
+	}
 
 	switch (node->type) {
 		case TOML_ROOT:
